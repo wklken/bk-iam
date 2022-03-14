@@ -11,6 +11,8 @@
 package group
 
 import (
+	"fmt"
+
 	"github.com/TencentBlueKing/gopkg/collection/set"
 
 	"iam/pkg/service"
@@ -28,6 +30,7 @@ func newDatabaseRetriever() *databaseRetriever {
 }
 
 func (r *databaseRetriever) retrieve(pks []int64) (map[int64][]types.ThinSubjectGroup, []int64, error) {
+	fmt.Println("[database] do retrieve:", pks)
 	subjectGroups, err := r.subjectService.ListEffectThinSubjectGroups(pks)
 	if err != nil {
 		return nil, nil, err
@@ -35,6 +38,7 @@ func (r *databaseRetriever) retrieve(pks []int64) (map[int64][]types.ThinSubject
 
 	missingPKs := r.getMissingPKs(pks, subjectGroups)
 
+	fmt.Printf("[database] do retrieve result: subjectGroups=%+v, missingPKs=%+v\n", subjectGroups, missingPKs)
 	return subjectGroups, missingPKs, nil
 }
 

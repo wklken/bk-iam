@@ -11,6 +11,7 @@
 package group
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -59,10 +60,13 @@ func (r *memoryRetriever) genKey(subjectPK int64) string {
 }
 
 func (r *memoryRetriever) retrieve(pks []int64) (map[int64][]types.ThinSubjectGroup, []int64, error) {
+	fmt.Println("[mem] do retrieve:", pks)
+
 	missSubjectPKs := make([]int64, 0, len(pks))
 	hitSubjectGroups := make(map[int64][]types.ThinSubjectGroup, len(pks))
 
 	changedTimestamps, err := changeList.FetchList(r.changeListKey)
+	fmt.Printf("[mem] changelist %+v", changedTimestamps)
 	if err != nil {
 		log.WithError(err).Errorf("[%s] batchFetchActionExpressionChangedList fail, will re-fetch all pks=`%v`",
 			MemoryLayer, pks)
@@ -106,6 +110,8 @@ func (r *memoryRetriever) retrieve(pks []int64) (map[int64][]types.ThinSubjectGr
 		if err != nil {
 			return nil, nil, err
 		}
+		fmt.Printf("[mem] call retrieve missing, retrievedSubjectGroups: %v, missingPKs: %v\n",
+			retrievedSubjectGroups, missingPKs)
 		// set missing into cache
 		r.setMissing(retrievedSubjectGroups, missingPKs)
 		// append the retrieved
@@ -113,9 +119,11 @@ func (r *memoryRetriever) retrieve(pks []int64) (map[int64][]types.ThinSubjectGr
 			hitSubjectGroups[subjectPK] = sgs
 		}
 
+		fmt.Printf("[mem] return1 hitSubjectGroups: %v, missing: %v\n", hitSubjectGroups, missingPKs)
 		return hitSubjectGroups, missingPKs, nil
 	}
 
+	fmt.Printf("[mem] return2 hitSubjectGroups: %v, missing: %v\n", hitSubjectGroups, nil)
 	return hitSubjectGroups, nil, nil
 }
 
@@ -125,6 +133,7 @@ func (r *memoryRetriever) setMissing(subjectGroups map[int64][]types.ThinSubject
 	for subjectPK, sgs := range subjectGroups {
 		key := r.genKey(subjectPK)
 
+		fmt.Printf("[mem] set missing, key=%+v, value=%+v\n", key, sgs)
 		cacheimpls.LocalSubjectGroupsCache.Set(key, &cachedSubjectGroups{
 			timestamp:     nowTimestamp,
 			subjectGroups: sgs,
@@ -133,6 +142,7 @@ func (r *memoryRetriever) setMissing(subjectGroups map[int64][]types.ThinSubject
 	for _, pk := range missingPKs {
 		key := r.genKey(pk)
 
+		fmt.Printf("[mem] set missing2, key=%+v, value=%+v\n", key, nil)
 		cacheimpls.LocalSubjectGroupsCache.Set(
 			key,
 			&cachedSubjectGroups{

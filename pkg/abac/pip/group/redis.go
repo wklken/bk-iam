@@ -11,6 +11,7 @@
 package group
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -42,7 +43,10 @@ func newRedisRetriever(retrieveFunc MissingRetrieveFunc) *redisRetriever {
 }
 
 func (r *redisRetriever) retrieve(pks []int64) (map[int64][]types.ThinSubjectGroup, []int64, error) {
+	fmt.Println("[redis] do retrieve:", pks)
+
 	hitSubjectGroups, missSubjectPKs, err := r.batchGet(pks)
+	fmt.Printf("[redis] batchGet: hitSubjectGroups: %v, missSubjectPKs: %v\n", hitSubjectGroups, missSubjectPKs)
 	// 1. if retrieve from redis fail, will fall through to retrieve from database
 	if err != nil {
 		log.WithError(err).Errorf("[%s] batchGet fail subjectPKs=`%+v`, will fallthrough to database",
@@ -53,6 +57,8 @@ func (r *redisRetriever) retrieve(pks []int64) (map[int64][]types.ThinSubjectGro
 
 	// if all hit, return
 	if len(missSubjectPKs) == 0 {
+		fmt.Printf("[redis] return, no missSubjectPKs. hitSubjectGroups=%+v, missSubjectPKs=%+v\n",
+			hitSubjectGroups, missSubjectPKs)
 		return hitSubjectGroups, missSubjectPKs, nil
 	}
 
@@ -61,6 +67,7 @@ func (r *redisRetriever) retrieve(pks []int64) (map[int64][]types.ThinSubjectGro
 	if err != nil {
 		return nil, nil, err
 	}
+	fmt.Printf("[redis] do retrieve, retrievedSubjectGroups=%+v, missingPKs=%+v\n", retrievedSubjectGroups, missingPKs)
 
 	// set missing into cache
 	r.setMissing(retrievedSubjectGroups, missingPKs)
@@ -69,6 +76,7 @@ func (r *redisRetriever) retrieve(pks []int64) (map[int64][]types.ThinSubjectGro
 		hitSubjectGroups[pk] = sgs
 	}
 
+	fmt.Printf("[redis] return, hitSubjectGroups=%+v, missingPKs=%+v\n", hitSubjectGroups, missingPKs)
 	return hitSubjectGroups, missingPKs, nil
 }
 
@@ -89,6 +97,7 @@ func (r *redisRetriever) setMissing(
 			subjectGroups[pk] = []types.ThinSubjectGroup{}
 		}
 	}
+	fmt.Printf("[redis] will set to cache, subjectGroups: %v\n", subjectGroups)
 	return r.batchSet(subjectGroups)
 }
 
@@ -105,6 +114,7 @@ func (r *redisRetriever) batchGet(pks []int64) (map[int64][]types.ThinSubjectGro
 			PK: pk,
 		})
 	}
+	fmt.Printf("[redis] batchGet, keys=%+v\n", keys)
 	hitCacheResults, err := cacheimpls.SubjectGroupCache.BatchGet(keys)
 	if err != nil {
 		err = errorWrapf(err, "SubjectGroupCache.BatchGet keys=`%+v` fail", keys)
@@ -148,6 +158,7 @@ func (r *redisRetriever) batchSet(subjectGroups map[int64][]types.ThinSubjectGro
 			Value: sgsBytes,
 		})
 	}
+	fmt.Printf("[redis] batchSet: %v\n", kvs)
 
 	// keep cache for 1 hour
 	err := cacheimpls.SubjectGroupCache.BatchSetWithTx(
