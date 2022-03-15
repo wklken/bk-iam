@@ -16,6 +16,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"go.uber.org/multierr"
 
 	"iam/pkg/abac/common"
 	"iam/pkg/cacheimpls"
@@ -154,4 +155,31 @@ func (r *memoryRetriever) setMissing(subjectGroups map[int64][]types.ThinSubject
 	}
 
 	return nil
+}
+
+func batchDeleteSubjectGroupsFromMemory(subjectType string, subjectPKs []int64) error {
+	if len(subjectPKs) == 0 {
+		return nil
+	}
+
+	members := make([]string, 0, len(subjectPKs))
+	for _, subjectPK := range subjectPKs {
+		subjectPKStr := strconv.FormatInt(subjectPK, 10)
+		members = append(members, subjectPKStr)
+
+		// delete from local cache
+		cacheimpls.LocalSubjectGroupsCache.Delete(subjectPKStr)
+	}
+
+	keyMembers := map[string][]string{
+		subjectType: members,
+	}
+	changeListKeys := []string{subjectType}
+
+	err := multierr.Combine(
+		changeList.AddToChangeList(keyMembers),
+		changeList.Truncate(changeListKeys),
+	)
+
+	return err
 }

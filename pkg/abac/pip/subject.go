@@ -11,8 +11,11 @@
 package pip
 
 import (
+	"github.com/TencentBlueKing/gopkg/cache"
 	"github.com/TencentBlueKing/gopkg/errorx"
+	log "github.com/sirupsen/logrus"
 
+	"iam/pkg/abac/pip/group"
 	"iam/pkg/abac/types"
 	"iam/pkg/cacheimpls"
 	svctypes "iam/pkg/service/types"
@@ -46,7 +49,7 @@ func GetSubjectPK(_type, id string) (int64, error) {
 }
 
 // GetSubjectDetail ...
-func GetSubjectDetail(pk int64) (departments []int64, groups []types.SubjectGroup, err error) {
+func GetSubjectDetail(pk int64) (departmentPKs []int64, groups []types.SubjectGroup, err error) {
 	detail, err := cacheimpls.GetSubjectDetail(pk)
 	if err != nil {
 		err = errorx.Wrapf(err, SubjectPIP, "GetSubjectDetail",
@@ -54,7 +57,39 @@ func GetSubjectDetail(pk int64) (departments []int64, groups []types.SubjectGrou
 		return
 	}
 
-	departments = detail.DepartmentPKs
+	departmentPKs = detail.DepartmentPKs
 	groups = convertSubjectGroups(detail.SubjectGroups)
-	return departments, groups, nil
+	return departmentPKs, groups, nil
+}
+
+func BatchDeleteSubjectCache(pks []int64) error {
+	keys := make([]cache.Key, 0, len(pks))
+	subjectTypePKs := make(map[string][]int64, 2)
+	for _, pk := range pks {
+		key := cacheimpls.SubjectPKCacheKey{
+			PK: pk,
+		}
+		keys = append(keys, key)
+
+		subject, err := cacheimpls.GetSubjectByPK(pk)
+		if err != nil {
+			log.WithError(err).Errorf("failed to get subject by pk %d", pk)
+			continue
+		}
+		subjectTypePKs[subject.Type] = append(subjectTypePKs[subject.Type], pk)
+	}
+
+	// delete subject detail cache
+	cacheimpls.SubjectCacheCleaner.BatchDelete(keys)
+	// delete subject groups
+	for subjectType, subjectPKs := range subjectTypePKs {
+		err := group.BatchDeleteSubjectGroupsFromCache(subjectType, subjectPKs)
+		if err != nil {
+			log.WithError(err).Errorf("group.BatchDeleteSubjectGroupsFromCache subjectType=`%s`, pks=`%v` fail",
+				subjectType, subjectPKs)
+			continue
+		}
+	}
+
+	return nil
 }

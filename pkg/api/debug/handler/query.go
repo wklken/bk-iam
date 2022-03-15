@@ -17,12 +17,14 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"iam/pkg/abac/pdp"
+	"iam/pkg/abac/pip"
 	"iam/pkg/abac/pip/group"
 	"iam/pkg/abac/types/request"
 	modelHandler "iam/pkg/api/model/handler"
 	"iam/pkg/cacheimpls"
 	"iam/pkg/logging/debug"
 	"iam/pkg/service"
+	"iam/pkg/service/types"
 	"iam/pkg/util"
 )
 
@@ -103,15 +105,13 @@ func QuerySubjects(c *gin.Context) {
 	// 3. 查subject所属的组
 	depts := []gin.H{}
 
-	detail, err := cacheimpls.GetSubjectDetail(pk)
-	departments := detail.DepartmentPKs
-	groups := detail.SubjectGroups
+	departmentPKs, groups, err := pip.GetSubjectDetail(pk)
 
 	if err != nil {
 		errs["GetSubjectDepartment"] = err
 		errs["GetSubjectGroups"] = err
 	} else {
-		for _, deptPK := range departments {
+		for _, deptPK := range departmentPKs {
 			subj, err1 := cacheimpls.GetSubjectByPK(deptPK)
 			if err1 != nil {
 				depts = append(depts, gin.H{
@@ -127,7 +127,7 @@ func QuerySubjects(c *gin.Context) {
 				}
 
 				// 查询部门所属的组
-				subjectGroups, err2 := group.GetSubjectGroupsFromCache(group.SubjectTypeDepartment, []int64{deptPK})
+				subjectGroups, err2 := group.GetSubjectGroupsFromCache(types.DepartmentType, []int64{deptPK})
 				if err2 != nil {
 					d["groups"] = err2.Error()
 				} else {
