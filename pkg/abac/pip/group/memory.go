@@ -66,7 +66,7 @@ func (r *memoryRetriever) retrieve(pks []int64) (map[int64][]types.ThinSubjectGr
 	hitSubjectGroups := make(map[int64][]types.ThinSubjectGroup, len(pks))
 
 	changedTimestamps, err := changeList.FetchList(r.changeListKey)
-	fmt.Printf("[mem] changelist %+v", changedTimestamps)
+	fmt.Printf("[mem] changelist %+v\n", changedTimestamps)
 	if err != nil {
 		log.WithError(err).Errorf("[%s] batchFetchActionExpressionChangedList fail, will re-fetch all pks=`%v`",
 			MemoryLayer, pks)

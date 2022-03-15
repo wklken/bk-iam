@@ -11,6 +11,7 @@
 package common
 
 import (
+	"fmt"
 	"time"
 
 	rds "github.com/go-redis/redis/v8"
@@ -54,6 +55,8 @@ func (r *ChangeList) FetchList(key string) (data map[string]int64, err error) {
 
 	// wrap the key
 	changeListKey := r.KeyPrefix + key
+
+	fmt.Println("the changeListKey", changeListKey)
 
 	zs, err := cacheimpls.ChangeListCache.ZRevRangeByScore(changeListKey, min, max, 0, r.MaxCount)
 	if err != nil {
