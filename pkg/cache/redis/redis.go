@@ -296,6 +296,7 @@ func (c *Cache) ZRevRangeByScore(k string, min int64, max int64, offset int64, c
 	ctx := context.TODO()
 
 	key := c.genKey(k)
+	fmt.Println("zrevrangebyscore key", key)
 	// TODO: add limit, offset, count => to ignore the too large list size
 	// LIMIT 0 -1 equals no args
 	cmds := c.cli.ZRevRangeByScoreWithScores(ctx, key, &redis.ZRangeBy{
