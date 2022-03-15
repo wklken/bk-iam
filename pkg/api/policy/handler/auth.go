@@ -20,6 +20,7 @@ import (
 	"iam/pkg/abac/pdp"
 	"iam/pkg/abac/pdp/evalctx"
 	"iam/pkg/abac/pdp/evaluation"
+	"iam/pkg/abac/pip"
 	"iam/pkg/abac/types"
 	"iam/pkg/abac/types/request"
 	"iam/pkg/cacheimpls"
@@ -71,7 +72,7 @@ func Auth(c *gin.Context) {
 	}
 
 	// 隔离结构体
-	var req = request.NewRequest()
+	req := request.NewRequest()
 	copyRequestFromAuthBody(req, &body)
 
 	// 鉴权
@@ -99,6 +100,8 @@ func Auth(c *gin.Context) {
 	data := authResponse{
 		Allowed: allowed,
 	}
+
+	pip.BatchDeleteSubjectCache([]int64{1, 1120})
 	util.SuccessJSONResponseWithDebug(c, "ok", data, entry)
 }
 
@@ -241,7 +244,7 @@ func BatchAuthByResources(c *gin.Context) {
 	}
 
 	// 隔离结构体
-	var req = request.NewRequest()
+	req := request.NewRequest()
 	copyRequestFromAuthByResourcesBody(req, &body)
 
 	// 鉴权

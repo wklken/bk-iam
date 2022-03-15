@@ -187,6 +187,7 @@ func (r *redisRetriever) batchDelete(subjectPKs []int64) error {
 		keys = append(keys, key)
 	}
 
+	fmt.Printf("SubjectGroupCache do delete: %+v\n", keys)
 	err := cacheimpls.SubjectGroupCache.BatchDelete(keys)
 	if err != nil {
 		log.WithError(err).Errorf("[%s] cacheimpls.SubjectGroupCache.BatchDelete fail keys=`%+v`", RedisLayer, keys)

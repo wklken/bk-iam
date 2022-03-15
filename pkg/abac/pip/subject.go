@@ -11,6 +11,8 @@
 package pip
 
 import (
+	"fmt"
+
 	"github.com/TencentBlueKing/gopkg/cache"
 	"github.com/TencentBlueKing/gopkg/errorx"
 	log "github.com/sirupsen/logrus"
@@ -83,6 +85,7 @@ func BatchDeleteSubjectCache(pks []int64) error {
 	cacheimpls.SubjectCacheCleaner.BatchDelete(keys)
 	// delete subject groups
 	for subjectType, subjectPKs := range subjectTypePKs {
+		fmt.Println("call group.BatchDeleteSubjectGroupsFromCache")
 		err := group.BatchDeleteSubjectGroupsFromCache(subjectType, subjectPKs)
 		if err != nil {
 			log.WithError(err).Errorf("group.BatchDeleteSubjectGroupsFromCache subjectType=`%s`, pks=`%v` fail",

@@ -168,6 +168,7 @@ func batchDeleteSubjectGroupsFromMemory(subjectType string, subjectPKs []int64) 
 		members = append(members, subjectPKStr)
 
 		// delete from local cache
+		fmt.Println("LocalSubjectGroupsCache do delete: ", subjectPKStr)
 		cacheimpls.LocalSubjectGroupsCache.Delete(subjectPKStr)
 	}
 
@@ -175,6 +176,9 @@ func batchDeleteSubjectGroupsFromMemory(subjectType string, subjectPKs []int64) 
 		subjectType: members,
 	}
 	changeListKeys := []string{subjectType}
+
+	fmt.Printf("changelist add members: %+v\n", keyMembers)
+	fmt.Printf("changelist truncate key: %+v\n", changeListKeys)
 
 	err := multierr.Combine(
 		changeList.AddToChangeList(keyMembers),

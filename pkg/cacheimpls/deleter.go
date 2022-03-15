@@ -11,6 +11,8 @@
 package cacheimpls
 
 import (
+	"fmt"
+
 	"github.com/TencentBlueKing/gopkg/cache"
 	"go.uber.org/multierr"
 )
@@ -66,6 +68,7 @@ func (d subjectCacheDeleter) Execute(key cache.Key) (err error) {
 	// SubjectGroupCache.Delete(key),
 	// SubjectDetailCache.Delete(key),
 	// )
+	fmt.Println("subjectDetailCache do delete:", key.Key())
 	return SubjectDetailCache.Delete(key)
 }
 
