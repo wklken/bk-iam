@@ -50,9 +50,15 @@ func GetUnmarshalledResourceExpression(
 	}
 
 	var value interface{}
-	value, err = LocalUnmarshaledExpressionCache.Get(key)
-	if err != nil {
-		return
+	// value, err = LocalUnmarshaledExpressionCache.Get(key)
+	value, exists := LocalUnmarshaledExpressionCache.Get(key.Key())
+	if !exists {
+		expr, err := UnmarshalExpression(key)
+		if err != nil {
+			return nil, err
+		}
+
+		LocalUnmarshaledExpressionCache.Set(key.Key(), expr, 0)
 	}
 
 	var ok bool

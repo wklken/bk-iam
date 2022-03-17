@@ -37,8 +37,8 @@ var (
 	LocalRemoteResourceListCache    memory.Cache
 	LocalSubjectPKCache             memory.Cache
 	LocalAPIGatewayJWTClientIDCache memory.Cache
-	LocalActionCache                memory.Cache // for iam engine
-	LocalUnmarshaledExpressionCache memory.Cache
+	LocalActionCache                memory.Cache   // for iam engine
+	LocalUnmarshaledExpressionCache *gocache.Cache // memory.Cache
 
 	RemoteResourceCache    *redis.Cache
 	ResourceTypeCache      *redis.Cache
@@ -152,13 +152,13 @@ func InitCaches(disabled bool) {
 
 	// 无影响, 重算而已不查db
 
-	LocalUnmarshaledExpressionCache = memory.NewCache(
-		"local_unmarshaled_expression",
-		disabled,
-		UnmarshalExpression,
-		30*time.Minute,
-		nil,
-	)
+	// LocalUnmarshaledExpressionCache = memory.NewCache(
+	// 	"local_unmarshaled_expression",
+	// 	disabled,
+	// 	UnmarshalExpression,
+	// 	30*time.Minute,
+	// 	nil,
+	// )
 
 	//  ==========================
 
@@ -214,6 +214,7 @@ func InitCaches(disabled bool) {
 	LocalPolicyCache = gocache.New(5*time.Minute, 5*time.Minute)
 	LocalExpressionCache = gocache.New(5*time.Minute, 5*time.Minute)
 	LocalSubjectGroupsCache = gocache.New(5*time.Minute, 5*time.Minute)
+	LocalUnmarshaledExpressionCache = gocache.New(30*time.Minute, 5*time.Minute)
 	ChangeListCache = redis.NewCache("cl", 5*time.Minute)
 
 	PolicyCache = redis.NewCache(
