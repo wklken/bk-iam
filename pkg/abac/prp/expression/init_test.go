@@ -11,6 +11,8 @@
 package expression_test
 
 import (
+	"strconv"
+	"testing"
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -69,3 +71,17 @@ var _ = Describe("Init", func() {
 		assert.NoError(GinkgoT(), err)
 	})
 })
+
+func BenchmarkGenKeyInt64ToString(b *testing.B) {
+	pk := int64(20000)
+	for i := 0; i < b.N; i++ {
+		strconv.FormatInt(pk, 10)
+	}
+}
+
+func BenchmarkGenKeyStringConcat(b *testing.B) {
+	subjectPKStr := "tom"
+	for i := 0; i < b.N; i++ {
+		_ = "bk_job:script_execute" + subjectPKStr
+	}
+}

@@ -22,6 +22,7 @@ import (
 	"iam/pkg/cacheimpls"
 	"iam/pkg/service"
 	"iam/pkg/service/types"
+	"iam/pkg/util"
 )
 
 const (
@@ -83,7 +84,8 @@ func (r *memoryRetriever) retrieve(subjectPKs []int64) ([]types.AuthPolicy, []in
 	} else {
 		timestampNano := time.Now().UnixNano()
 		for _, subjectPK := range subjectPKs {
-			subjectPKStr := strconv.FormatInt(subjectPK, 10)
+			// subjectPKStr := strconv.FormatInt(subjectPK, 10)
+			subjectPKStr := util.ConvInt64ToString(subjectPK)
 
 			key := r.genKey(subjectPKStr)
 			value, found := cacheimpls.LocalPolicyCache.GetAfterExpirationAnchor(key, timestampNano)
@@ -163,7 +165,8 @@ func (r *memoryRetriever) setMissing(policies []types.AuthPolicy, missingSubject
 
 	// set into cache
 	for subjectPK, ps := range groupedPolicies {
-		subjectPKStr := strconv.FormatInt(subjectPK, 10)
+		// subjectPKStr := strconv.FormatInt(subjectPK, 10)
+		subjectPKStr := util.ConvInt64ToString(subjectPK)
 		key := r.genKey(subjectPKStr)
 
 		cacheimpls.LocalPolicyCache.Set(

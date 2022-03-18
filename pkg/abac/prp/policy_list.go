@@ -27,14 +27,12 @@ import (
 )
 
 const (
-	tooLargeThreshold   = 300
+	tooLargeThreshold   = 500
 	queryTypePolicy     = "ListPolicy"
 	queryTypeExpression = "ListExpression"
 )
 
-var (
-	emptyAuthExpression = svctypes.AuthExpression{}
-)
+var emptyAuthExpression = svctypes.AuthExpression{}
 
 func convertToAuthPolicy(svcPolicy svctypes.AuthPolicy, svcExpression svctypes.AuthExpression) types.AuthPolicy {
 	return types.AuthPolicy{

@@ -13,6 +13,8 @@ package util_test
 import (
 	"fmt"
 	"strconv"
+	"strings"
+	"sync"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -22,9 +24,8 @@ import (
 )
 
 var _ = Describe("String", func() {
-
 	Describe("TruncateBytes", func() {
-		var s = []byte("helloworld")
+		s := []byte("helloworld")
 
 		DescribeTable("TruncateBytes cases", func(expected []byte, truncatedSize int) {
 			assert.Equal(GinkgoT(), expected, util.TruncateBytes(s, truncatedSize))
@@ -36,8 +37,8 @@ var _ = Describe("String", func() {
 	})
 
 	Describe("TruncateBytesToString", func() {
-		var s = []byte("helloworld")
-		var sStr = string(s)
+		s := []byte("helloworld")
+		sStr := string(s)
 
 		DescribeTable("TruncateBytesToString cases", func(expected string, truncatedSize int) {
 			assert.Equal(GinkgoT(), expected, util.TruncateBytesToString(s, truncatedSize))
@@ -47,49 +48,101 @@ var _ = Describe("String", func() {
 			Entry("truncated size greater than real size", sStr, 20),
 		)
 	})
-
 })
 
 func BenchmarkStringSprintf(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_ = fmt.Sprintf("iam:%s", "policies")
+		_ = fmt.Sprintf("bk_job:script_execute:%s", "12345678")
 	}
 }
 
 func BenchmarkStringConcat(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_ = "iam:" + "policies"
+		_ = "bk_job:script_execute:" + "12345678"
+	}
+}
+
+func BenchmarkStringBuilder(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var s strings.Builder
+		s.WriteString("bk_job:script_execute:")
+		s.WriteString("12345678")
+		_ = s.String()
+	}
+}
+
+func BenchmarkStringBuilderWithPool(b *testing.B) {
+	pool := sync.Pool{
+		New: func() interface{} {
+			return new(strings.Builder)
+		},
+	}
+
+	for i := 0; i < b.N; i++ {
+		// var s strings.Builder
+		s := pool.Get().(*strings.Builder)
+
+		s.WriteString("bk_job:script_execute:")
+		s.WriteString("12345678")
+		_ = s.String()
+
+		s.Reset()
+		pool.Put(s)
 	}
 }
 
 func BenchmarkIntStringSprintfD(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_ = fmt.Sprintf("%d", 123)
+		_ = fmt.Sprintf("%d", 123456)
 	}
 }
 
 func BenchmarkIntToStringItoa(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		strconv.Itoa(123)
+		strconv.Itoa(123456)
 	}
 }
 
-func BenchmarkIntToStringFormatInt(b *testing.B) {
-	x := int64(123)
+func BenchmarkInt64StringSprintfD(b *testing.B) {
+	x := int64(123456)
+	for i := 0; i < b.N; i++ {
+		_ = fmt.Sprintf("%d", x)
+	}
+}
+
+func BenchmarkInt64ToStringFormatInt(b *testing.B) {
+	x := int64(123456)
 	for i := 0; i < b.N; i++ {
 		strconv.FormatInt(x, 10)
 	}
 }
 
-func BenchmarkStringAddIntSprintf(b *testing.B) {
-	x := int64(123)
+func BenchmarkInt64ToStringUseMap(b *testing.B) {
+	m := map[int64]string{}
+	largest := int64(1000000)
+	var i int64
+	for i = 0; i < largest; i++ {
+		m[i] = strconv.FormatInt(i, 10)
+	}
+
+	// TODO: we can build a global map for this!!!!!
+
+	x := int64(123456)
+	for i := 0; i < b.N; i++ {
+		_ = m[x]
+		// strconv.FormatInt(x, 10)
+	}
+}
+
+func BenchmarkStringAddInt64Sprintf(b *testing.B) {
+	x := int64(123456)
 	for i := 0; i < b.N; i++ {
 		_ = fmt.Sprintf("%s:%d", "abc", x)
 	}
 }
 
-func BenchmarkStringAddIntFormatInt(b *testing.B) {
-	x := int64(123)
+func BenchmarkStringAddInt64FormatInt(b *testing.B) {
+	x := int64(123456)
 	for i := 0; i < b.N; i++ {
 		_ = "abc" + strconv.FormatInt(x, 10)
 	}

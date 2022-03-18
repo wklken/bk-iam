@@ -181,6 +181,7 @@ func (r *redisRetriever) batchGet(subjectPKs []int64) (
 	for _, subjectPK := range subjectPKs {
 		key := r.genKey(subjectPK)
 		field := strconv.FormatInt(r.actionPK, 10)
+		// field := util.ConvInt64ToString(r.actionPK)
 
 		hashKeyFields = append(hashKeyFields, redis.HashKeyField{
 			Key:   key.Key(),

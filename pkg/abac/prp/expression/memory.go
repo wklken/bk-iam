@@ -20,6 +20,7 @@ import (
 	"iam/pkg/abac/prp/common"
 	"iam/pkg/cacheimpls"
 	"iam/pkg/service/types"
+	"iam/pkg/util"
 )
 
 const (
@@ -65,7 +66,8 @@ type cachedExpression struct {
 }
 
 func (r *memoryRetriever) genKey(expressionPK int64) string {
-	return strconv.FormatInt(expressionPK, 10)
+	// return strconv.FormatInt(expressionPK, 10)
+	return util.ConvInt64ToString(expressionPK)
 }
 
 func (r *memoryRetriever) retrieve(pks []int64) ([]types.AuthExpression, []int64, error) {

@@ -10,9 +10,40 @@
 
 package util
 
+import (
+	"fmt"
+	"strconv"
+)
+
 var sentryOn bool
+
+const MaxPoolInteger = int64(1000000)
+
+var int64ToStringMap map[int64]string // stringToInt64Map map[string]int64
 
 // InitErrorReport init the sentryEnabled var
 func InitErrorReport(sentryEnabled bool) {
 	sentryOn = sentryEnabled
+
+	int64ToStringMap = make(map[int64]string, MaxPoolInteger)
+
+	var i int64
+	k := MaxPoolInteger
+	for i = 0; i < k; i++ {
+		s := strconv.FormatInt(i, 10)
+		int64ToStringMap[i] = s
+		// stringToInt64Map[s] = i
+	}
+}
+
+func ConvInt64ToString(i int64) string {
+	if i < MaxPoolInteger {
+		value, ok := int64ToStringMap[i]
+		if !ok {
+			fmt.Println("not exits", i)
+		}
+		return value
+	}
+
+	return strconv.FormatInt(i, 10)
 }
