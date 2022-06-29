@@ -31,17 +31,20 @@ const CacheLayer = "Cache"
 var (
 	LocalAppCodeAppSecretCache      *gocache.Cache
 	LocalAuthAppAccessKeyCache      *gocache.Cache
-	LocalSubjectCache               memory.Cache
-	LocalSubjectRoleCache           memory.Cache
-	LocalSystemClientsCache         memory.Cache
-	LocalRemoteResourceListCache    memory.Cache
-	LocalSubjectPKCache             memory.Cache
 	LocalAPIGatewayJWTClientIDCache memory.Cache
-	LocalActionCache                memory.Cache // for iam engine
-	LocalUnmarshaledExpressionCache *gocache.Cache
+
+	LocalSubjectCache     memory.Cache
+	LocalSubjectPKCache   memory.Cache
+	LocalSubjectRoleCache memory.Cache
+
+	LocalRemoteResourceListCache memory.Cache
+	LocalSystemClientsCache      memory.Cache
+	LocalActionCache             memory.Cache // for iam engine
+	LocalActionDetailCache       memory.Cache
+	LocalSubjectBlackListCache   memory.Cache
+
 	LocalGroupSystemAuthTypeCache   *gocache.Cache
-	LocalActionDetailCache          memory.Cache
-	LocalSubjectBlackListCache      memory.Cache
+	LocalUnmarshaledExpressionCache *gocache.Cache
 
 	RemoteResourceCache     *redis.Cache
 	ResourceTypeCache       *redis.Cache
